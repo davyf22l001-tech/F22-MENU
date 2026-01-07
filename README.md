@@ -213,7 +213,25 @@ local PODERES_LISTA = {
     "Pine Burst", "Nature's Wrath", "Warp Bomb", "Time Trap", "Tempo Beam", 
     "Fire Bomb", "Comet", "Combust", "Fire Shower", "Elysian Beam", 
     "Shadow Sword", "Dark Hold", "Frost Staff", "Ice Disk", 
-    "Frost Fire Bomb", "Ultracold Aura", "Ice Spikes"
+    "Frost Fire Bomb", "Ultracold Aura", "Ice Spikes",
+    "Lava Katana", "Lava Ball", "Magam Fists", "Lava Dash", "Volcano Sentry", "Magma Spikes", "Nibiru",
+    "Bone Scythe", "Blaster", "Bones Barrage", "Flying Bone", "Bone Surge", "Twin Blasters", "Judgement Blast",
+    "Crystal Cleaver", "Crystal Mine", "Energy Crash", "Energy Crown", "Crystal Eruption", "Energy Crystal", "Crystal Surge",
+    "Unseen Hands", "Unseen Barrage", "Dark Duo", "Abyss", "Dark Arc",
+    "Light Saber", "Light Ball", "Light Orbs", "Blinding Light", "Shooting Star", "Light Speed", "Light Beam",
+    "Christmas Tree Sword", "Plantoid", "Spore Bombs", "Nature's Blessing", "Nuclear Spore",
+    "Frost Fire Ball", "Snow Ball", "Ultracold Aura",
+    "Thunder Staff", "Bolt", "Barrage", "Discharge", "Flying Nimbus", "Lighting Strike", "Storm",
+    "Tectonic Hamer", "Stone Throw", "Rocks Barrage", "Large Boulder", "Burrow", "Stone Henge", "Earth Spikes",
+    "Fire Sword", "Fire Ball", "Fire Fly",
+    "Hyper Sword", "Phonton Blast", "Twin-Photon Blash", "Orbital", "Tesseract", "Hyper Slash",
+    "Gravity Katana", "Heavy Infliction", "Tectonic Barrage", "Gravity Orb", "Tectonic Burst", "Zero Gravity", "Gravity Globe",
+    "Time Scepter", "Temporal Gate", "Warp Barrage", "Tempo Beam", "Time Trap", "Warp Bomb", "Grand Clock",
+    "Venom Blade", "Poison Bullet", "Acid Rain", "Venom Stream", "Hardened Venom", "Poison Demon", "Bubbling Venom",
+    "Devil Sword", "Evil Bullet", "Fangs Barrage", "Evil Flash", "Demon Orb", "Demon Lock", "Dark Tsunami",
+    "Space Gun", "Blackhole Orb", "Moon Splitter", "Asteroid Belt", "Meteor Jam", "Cosmic Remote", "Space Saucer",
+    "Sonic Blaster", "Sonic Twister", "Rebound Blast", "Rebound Teleport", "Sonic Boom",
+    "Draedron's Tech", "Rocket Launcher"
 }
 
 -- Variáveis de Estado
@@ -239,7 +257,7 @@ local LAUNCH_ATIVADO = false
 local FLY_SPEED = 50
 
 local LAUNCH_CONFIG = {
-    TARGET_NAME = "DAVY019",
+    TARGET_NAME = "kaiox_994:",
     VELOCITY = 0.1,
     LAUNCH_FORCE = 999999
 }
@@ -940,4 +958,4 @@ LocalPlayer.CharacterAdded:Connect(function(newChar)
 end)
 
 showPoderes()
-print("Menu Carregado!")
+print("Menu Carregado")
