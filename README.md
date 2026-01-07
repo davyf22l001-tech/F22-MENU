@@ -7,7 +7,6 @@ local VirtualUser = game:GetService("VirtualUser")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
--- --- LÓGICA ORIGINAL DE PODERES ---
 local function gRE()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if remotes then
@@ -17,7 +16,6 @@ local function gRE()
     return ReplicatedStorage:FindFirstChild("RemoteEvent")
 end
 
--- --- SISTEMA DE EFEITOS VISUAIS ---
 local EFEITOS_ATIVOS = {}
 local EFEITOS_CONFIG = {
     ["Tesla Turret"] = {
@@ -52,7 +50,6 @@ local EFEITOS_CONFIG = {
     }
 }
 
--- Criar RemoteEvent para sincronizar efeitos
 local function criarRemoteEfeitos()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if not remotes then
@@ -72,19 +69,16 @@ end
 
 local RemoteEfeitos = criarRemoteEfeitos()
 
--- Função para criar partículas de raios
 local function criarEfeitoRaios(character, config)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
     local rootPart = character.HumanoidRootPart
     
-    -- Criar attachment para partículas
     if not rootPart:FindFirstChild("EfeitoAttachment") then
         local attachment = Instance.new("Attachment")
         attachment.Name = "EfeitoAttachment"
         attachment.Parent = rootPart
         
-        -- Criar ParticleEmitter para raios
         local particleEmitter = Instance.new("ParticleEmitter")
         particleEmitter.Parent = attachment
         particleEmitter.Texture = "rbxasset://textures/Particles/sparkles_main.dds"
@@ -101,7 +95,6 @@ local function criarEfeitoRaios(character, config)
         particleEmitter.Enabled = true
     end
     
-    -- Criar Highlight (brilho)
     if not character:FindFirstChild("Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Parent = character
@@ -117,7 +110,6 @@ local function criarEfeitoRaios(character, config)
         highlight.OutlineTransparency = 0.1
     end
     
-    -- Criar trails nos braços e pernas
     for _, part in pairs(character:GetDescendants()) do
         if (part.Name == "LeftHand" or part.Name == "RightHand" or 
             part.Name == "LeftFoot" or part.Name == "RightFoot") and part:IsA("BasePart") then
@@ -149,7 +141,6 @@ local function criarEfeitoRaios(character, config)
     EFEITOS_ATIVOS[character] = config
 end
 
--- Função para remover efeitos
 local function removerEfeito(character)
     if character:FindFirstChild("Highlight") then
         character.Highlight:Destroy()
@@ -163,7 +154,6 @@ local function removerEfeito(character)
     EFEITOS_ATIVOS[character] = nil
 end
 
--- Sincronizar efeitos para todos os jogadores
 if RemoteEfeitos then
     RemoteEfeitos.OnClientEvent:Connect(function(player, tipoEfeito, ativado)
         if player.Character then
@@ -176,7 +166,6 @@ if RemoteEfeitos then
     end)
 end
 
--- Função para disparar efeito para todos
 local function ativarEfeitoGlobal(tipoEfeito, ativado)
     if RemoteEfeitos then
         RemoteEfeitos:FireServer(LocalPlayer, tipoEfeito, ativado)
@@ -191,7 +180,6 @@ local function ativarEfeitoGlobal(tipoEfeito, ativado)
     end
 end
 
--- --- SISTEMA DE TELETRANSPORTE ---
 local function teleportarPara(targetPlayer)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         return false
@@ -201,14 +189,12 @@ local function teleportarPara(targetPlayer)
         return false
     end
     
-    -- Teleportar para a posição do alvo + um pouco acima para não ficar dentro dele
     local targetPos = targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0)
     LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
     
     return true
 end
 
--- Função para obter lista de jogadores
 local function obterListaJogadores()
     local lista = {}
     for _, p in pairs(Players:GetPlayers()) do
@@ -252,9 +238,8 @@ local LAUNCH_ATIVADO = false
 
 local FLY_SPEED = 50
 
--- VARIAVEIS E FUNCOES DE VOID LAUNCH
 local LAUNCH_CONFIG = {
-    TARGET_NAME = "kaiox_994:",
+    TARGET_NAME = "DAVY019",
     VELOCITY = 0.1,
     LAUNCH_FORCE = 999999
 }
@@ -331,7 +316,6 @@ local function stopAllLaunches()
     end
 end
 
--- Criando a Interface (GUI)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SuperMenuManusV43"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -358,7 +342,6 @@ Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
 
--- Botão de Abrir/Fechar
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = ScreenGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -373,7 +356,6 @@ ToggleButton.MouseButton1Click:Connect(function()
     ToggleButton.Text = MainFrame.Visible and "FECHAR MENU" or "ABRIR MENU"
 end)
 
--- Sistema de Abas
 local TabButtons = Instance.new("Frame")
 TabButtons.Parent = MainFrame
 TabButtons.Position = UDim2.new(0, 0, 0, 40)
@@ -434,7 +416,6 @@ local function criarToggle(parent, texto, estado, callback)
     return btn
 end
 
--- --- ABA PODERES ---
 local function showPoderes()
     limparConteudo()
     local scroll = Instance.new("ScrollingFrame")
@@ -479,7 +460,6 @@ local function showPoderes()
     end
 end
 
--- --- ABA COMBATE ---
 local function showCombate()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -492,7 +472,6 @@ local function showCombate()
     criarToggle(ContentFrame, "GOD MODE", GOD_MODE_ATIVADO, function(v) GOD_MODE_ATIVADO = v end)
 end
 
--- --- ABA MOVIMENTO ---
 local function showMovimento()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -516,13 +495,11 @@ local function showMovimento()
     end)
 end
 
--- --- ABA FARM ---
 local function showFarm()
     limparConteudo()
     criarToggle(ContentFrame, "AUTO-COLLECT MOEDAS", AUTO_FARM_ATIVADO, function(v) AUTO_FARM_ATIVADO = v end)
 end
 
--- --- ABA VISUAL ---
 local function showVisual()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -543,7 +520,6 @@ local function showVisual()
     criarToggle(ContentFrame, "ESP HEALTH (Vida)", ESP_VIDA, function(v) ESP_VIDA = v end)
 end
 
--- --- ABA EFEITOS VISUAIS ---
 local function showEfeitos()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -588,7 +564,6 @@ local function showEfeitos()
     end
 end
 
--- --- ABA TELEPORTE (NOVA) ---
 local function showTeleporte()
     limparConteudo()
     
@@ -732,7 +707,6 @@ local function showVoidLaunch()
     end
 end
 
--- Conectar botões
 botoesAbas["Poderes"].MouseButton1Click:Connect(showPoderes)
 botoesAbas["Combate"].MouseButton1Click:Connect(showCombate)
 botoesAbas["Movimento"].MouseButton1Click:Connect(showMovimento)
@@ -742,9 +716,7 @@ botoesAbas["Efeitos"].MouseButton1Click:Connect(showEfeitos)
 botoesAbas["Teleporte"].MouseButton1Click:Connect(showTeleporte)
 botoesAbas["Void Launch"].MouseButton1Click:Connect(showVoidLaunch)
 
--- --- LÓGICAS DE FUNCIONAMENTO ---
 
--- 1. Função para pegar o inimigo mais próximo
 local function getClosestPlayer()
     local target = nil
     local dist = math.huge
@@ -760,7 +732,6 @@ local function getClosestPlayer()
     return target
 end
 
--- 2. Hook para o Silent Aim e No Cooldown (Metatabela)
 local oldFireServer
 oldFireServer = hookfunction(gRE().FireServer, function(re, ...)
     local args = {...}
@@ -780,7 +751,6 @@ oldFireServer = hookfunction(gRE().FireServer, function(re, ...)
     return oldFireServer(re, unpack(args))
 end)
 
--- 3. Atributos e Bypass de Cooldown Local
 RunService.Heartbeat:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
@@ -807,7 +777,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 4. No Clip
 RunService.Stepped:Connect(function()
     if NO_CLIP_ATIVADO and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -816,7 +785,6 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 5. Kill Aura
 task.spawn(function()
     while true do
         if KILL_AURA_ATIVADO and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -830,7 +798,6 @@ task.spawn(function()
     end
 end)
 
--- 6. Fly
 local bv, bg
 RunService.RenderStepped:Connect(function()
     if FLY_ATIVADO and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -854,14 +821,12 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 7. Pulo Infinito
 UserInputService.JumpRequest:Connect(function()
     if INF_JUMP_ATIVADO and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
 
--- 8. ESP UNIFICADO
 local ESP_Objects = {}
 
 local function createESP(player)
@@ -960,7 +925,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 9. Anti-AFK
 LocalPlayer.Idled:Connect(function()
     if ANTI_AFK_ATIVADO then
         VirtualUser:CaptureController()
@@ -968,7 +932,6 @@ LocalPlayer.Idled:Connect(function()
     end
 end)
 
--- 10. Sincronizar efeitos quando o personagem muda
 LocalPlayer.CharacterAdded:Connect(function(newChar)
     if EFEITOS_VISUAIS_ATIVADO and EFEITO_SELECIONADO then
         task.wait(0.5)
@@ -977,4 +940,4 @@ LocalPlayer.CharacterAdded:Connect(function(newChar)
 end)
 
 showPoderes()
-print("[Manus AI] Mega Menu V4.3 Carregado com Teleporte!")
+print("Menu Carregado!")
