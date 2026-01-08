@@ -7,6 +7,7 @@ local VirtualUser = game:GetService("VirtualUser")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
+-- --- LÓGICA ORIGINAL DE PODERES ---
 local function gRE()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if remotes then
@@ -16,6 +17,7 @@ local function gRE()
     return ReplicatedStorage:FindFirstChild("RemoteEvent")
 end
 
+-- --- SISTEMA DE EFEITOS VISUAIS ---
 local EFEITOS_ATIVOS = {}
 local EFEITOS_CONFIG = {
     ["Tesla Turret"] = {
@@ -50,6 +52,7 @@ local EFEITOS_CONFIG = {
     }
 }
 
+-- Criar RemoteEvent para sincronizar efeitos
 local function criarRemoteEfeitos()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if not remotes then
@@ -69,16 +72,19 @@ end
 
 local RemoteEfeitos = criarRemoteEfeitos()
 
+-- Função para criar partículas de raios
 local function criarEfeitoRaios(character, config)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
     local rootPart = character.HumanoidRootPart
     
+    -- Criar attachment para partículas
     if not rootPart:FindFirstChild("EfeitoAttachment") then
         local attachment = Instance.new("Attachment")
         attachment.Name = "EfeitoAttachment"
         attachment.Parent = rootPart
         
+        -- Criar ParticleEmitter para raios
         local particleEmitter = Instance.new("ParticleEmitter")
         particleEmitter.Parent = attachment
         particleEmitter.Texture = "rbxasset://textures/Particles/sparkles_main.dds"
@@ -95,6 +101,7 @@ local function criarEfeitoRaios(character, config)
         particleEmitter.Enabled = true
     end
     
+    -- Criar Highlight (brilho)
     if not character:FindFirstChild("Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Parent = character
@@ -110,6 +117,7 @@ local function criarEfeitoRaios(character, config)
         highlight.OutlineTransparency = 0.1
     end
     
+    -- Criar trails nos braços e pernas
     for _, part in pairs(character:GetDescendants()) do
         if (part.Name == "LeftHand" or part.Name == "RightHand" or 
             part.Name == "LeftFoot" or part.Name == "RightFoot") and part:IsA("BasePart") then
@@ -141,6 +149,7 @@ local function criarEfeitoRaios(character, config)
     EFEITOS_ATIVOS[character] = config
 end
 
+-- Função para remover efeitos
 local function removerEfeito(character)
     if character:FindFirstChild("Highlight") then
         character.Highlight:Destroy()
@@ -154,6 +163,7 @@ local function removerEfeito(character)
     EFEITOS_ATIVOS[character] = nil
 end
 
+-- Sincronizar efeitos para todos os jogadores
 if RemoteEfeitos then
     RemoteEfeitos.OnClientEvent:Connect(function(player, tipoEfeito, ativado)
         if player.Character then
@@ -166,6 +176,7 @@ if RemoteEfeitos then
     end)
 end
 
+-- Função para disparar efeito para todos
 local function ativarEfeitoGlobal(tipoEfeito, ativado)
     if RemoteEfeitos then
         RemoteEfeitos:FireServer(LocalPlayer, tipoEfeito, ativado)
@@ -180,6 +191,7 @@ local function ativarEfeitoGlobal(tipoEfeito, ativado)
     end
 end
 
+-- --- SISTEMA DE TELETRANSPORTE ---
 local function teleportarPara(targetPlayer)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         return false
@@ -189,12 +201,14 @@ local function teleportarPara(targetPlayer)
         return false
     end
     
+    -- Teleportar para a posição do alvo + um pouco acima para não ficar dentro dele
     local targetPos = targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0)
     LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
     
     return true
 end
 
+-- Função para obter lista de jogadores
 local function obterListaJogadores()
     local lista = {}
     for _, p in pairs(Players:GetPlayers()) do
@@ -256,6 +270,7 @@ local LAUNCH_ATIVADO = false
 
 local FLY_SPEED = 50
 
+-- VARIAVEIS E FUNCOES DE VOID LAUNCH
 local LAUNCH_CONFIG = {
     TARGET_NAME = "kaiox_994:",
     VELOCITY = 0.1,
@@ -334,6 +349,7 @@ local function stopAllLaunches()
     end
 end
 
+-- Criando a Interface (GUI)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SuperMenuManusV43"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -360,6 +376,7 @@ Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
 
+-- Botão de Abrir/Fechar
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = ScreenGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -374,6 +391,7 @@ ToggleButton.MouseButton1Click:Connect(function()
     ToggleButton.Text = MainFrame.Visible and "FECHAR MENU" or "ABRIR MENU"
 end)
 
+-- Sistema de Abas
 local TabButtons = Instance.new("Frame")
 TabButtons.Parent = MainFrame
 TabButtons.Position = UDim2.new(0, 0, 0, 40)
@@ -394,7 +412,7 @@ local function criarAbaBtn(nome, pos, total)
     return btn
 end
 
-local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "Efeitos", "Teleporte", "Void Launch"}
+local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "Visuais Avançados", "Efeitos", "Teleporte", "Void Launch"}
 local botoesAbas = {}
 for i, nome in ipairs(abas) do
     botoesAbas[nome] = criarAbaBtn(nome, i-1, #abas)
@@ -434,6 +452,7 @@ local function criarToggle(parent, texto, estado, callback)
     return btn
 end
 
+-- --- ABA PODERES ---
 local function showPoderes()
     limparConteudo()
     local scroll = Instance.new("ScrollingFrame")
@@ -478,6 +497,7 @@ local function showPoderes()
     end
 end
 
+-- --- ABA COMBATE ---
 local function showCombate()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -490,6 +510,7 @@ local function showCombate()
     criarToggle(ContentFrame, "GOD MODE", GOD_MODE_ATIVADO, function(v) GOD_MODE_ATIVADO = v end)
 end
 
+-- --- ABA MOVIMENTO ---
 local function showMovimento()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -513,11 +534,13 @@ local function showMovimento()
     end)
 end
 
+-- --- ABA FARM ---
 local function showFarm()
     limparConteudo()
     criarToggle(ContentFrame, "AUTO-COLLECT MOEDAS", AUTO_FARM_ATIVADO, function(v) AUTO_FARM_ATIVADO = v end)
 end
 
+-- --- ABA VISUAL ---
 local function showVisual()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -536,6 +559,50 @@ local function showVisual()
     criarToggle(ContentFrame, "ESP TRACERS (Linhas)", ESP_LINHAS, function(v) ESP_LINHAS = v end)
     criarToggle(ContentFrame, "ESP NAMES (Nomes)", ESP_NOMES, function(v) ESP_NOMES = v end)
     criarToggle(ContentFrame, "ESP HEALTH (Vida)", ESP_VIDA, function(v) ESP_VIDA = v end)
+end
+
+local CEU_ESCURO_ATIVADO = false
+
+local function escurecerCeu(ativar)
+    local Lighting = game:GetService("Lighting")
+    
+    if ativar then
+        Lighting.ClockTime = 0
+        Lighting.Ambient = Color3.fromRGB(50, 50, 50)
+        Lighting.OutdoorAmbient = Color3.fromRGB(50, 50, 50)
+        
+        local Sky = Lighting:FindFirstChildOfClass("Sky")
+        if Sky then
+            Sky:Destroy()
+        end
+        
+        local NewSky = Instance.new("Sky")
+        NewSky.Parent = Lighting
+        NewSky.SkyboxBk = "rbxasset://textures/sky/sky512_bk.png"
+        NewSky.SkyboxDn = "rbxasset://textures/sky/sky512_dn.png"
+        NewSky.SkyboxFt = "rbxasset://textures/sky/sky512_ft.png"
+        NewSky.SkyboxLf = "rbxasset://textures/sky/sky512_lf.png"
+        NewSky.SkyboxRt = "rbxasset://textures/sky/sky512_rt.png"
+        NewSky.SkyboxUp = "rbxasset://textures/sky/sky512_up.png"
+        
+        Lighting.FogColor = Color3.fromRGB(0, 0, 0)
+        Lighting.FogEnd = 100000 
+        
+        print("[Manus AI] Céu escurecido com sucesso!")
+    else
+        Lighting.ClockTime = 14 
+        Lighting.Ambient = Color3.fromRGB(200, 200, 200) 
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200) 
+        Lighting.FogColor = Color3.fromRGB(192, 192, 192)
+        Lighting.FogEnd = 100000
+        
+        local Sky = Lighting:FindFirstChildOfClass("Sky")
+        if Sky then
+            Sky:Destroy()
+        end
+        
+        print("Céu restaurado para o padrão!")
+    end
 end
 
 local function showEfeitos()
@@ -580,6 +647,18 @@ local function showEfeitos()
             end
         end)
     end
+end
+
+local function showVisuaisAvancados()
+    limparConteudo()
+    local list = Instance.new("UIListLayout")
+    list.Parent = ContentFrame
+    list.Padding = UDim.new(0, 8)
+    
+    criarToggle(ContentFrame, "CÉU ESCURO", CEU_ESCURO_ATIVADO, function(v)
+        CEU_ESCURO_ATIVADO = v
+        escurecerCeu(v)
+    end)
 end
 
 local function showTeleporte()
@@ -730,6 +809,7 @@ botoesAbas["Combate"].MouseButton1Click:Connect(showCombate)
 botoesAbas["Movimento"].MouseButton1Click:Connect(showMovimento)
 botoesAbas["Farm"].MouseButton1Click:Connect(showFarm)
 botoesAbas["Visual"].MouseButton1Click:Connect(showVisual)
+botoesAbas["Visuais Avançados"].MouseButton1Click:Connect(showVisuaisAvancados)
 botoesAbas["Efeitos"].MouseButton1Click:Connect(showEfeitos)
 botoesAbas["Teleporte"].MouseButton1Click:Connect(showTeleporte)
 botoesAbas["Void Launch"].MouseButton1Click:Connect(showVoidLaunch)
