@@ -1207,7 +1207,7 @@ local function showDono()
     descLabel.Size = UDim2.new(1, -16, 1, -12)
     descLabel.Position = UDim2.new(0, 8, 0, 6)
     descLabel.BackgroundTransparency = 1
-    descLabel.Text = "Sejam bem-vindos ao ELEMENTAL MENU — aproveitem as funcionalidades do ELEMENTAL POWERS TYCOON e divirtam-se!"
+    descLabel.Text = "Sejam bem-vindos"
     descLabel.TextWrapped = true
     descLabel.Font = Enum.Font.SourceSans
     descLabel.TextSize = 14
