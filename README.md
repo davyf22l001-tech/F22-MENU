@@ -3,11 +3,11 @@ local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local VirtualUser = game:GetService("VirtualUser")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
--- --- LÓGICA ORIGINAL DE PODERES ---
 local function gRE()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if remotes then
@@ -17,7 +17,6 @@ local function gRE()
     return ReplicatedStorage:FindFirstChild("RemoteEvent")
 end
 
--- --- SISTEMA DE EFEITOS VISUAIS ---
 local EFEITOS_ATIVOS = {}
 local EFEITOS_CONFIG = {
     ["Tesla Turret"] = {
@@ -52,7 +51,6 @@ local EFEITOS_CONFIG = {
     }
 }
 
--- Criar RemoteEvent para sincronizar efeitos
 local function criarRemoteEfeitos()
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
     if not remotes then
@@ -72,19 +70,16 @@ end
 
 local RemoteEfeitos = criarRemoteEfeitos()
 
--- Função para criar partículas de raios
 local function criarEfeitoRaios(character, config)
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
     local rootPart = character.HumanoidRootPart
     
-    -- Criar attachment para partículas
     if not rootPart:FindFirstChild("EfeitoAttachment") then
         local attachment = Instance.new("Attachment")
         attachment.Name = "EfeitoAttachment"
         attachment.Parent = rootPart
         
-        -- Criar ParticleEmitter para raios
         local particleEmitter = Instance.new("ParticleEmitter")
         particleEmitter.Parent = attachment
         particleEmitter.Texture = "rbxasset://textures/Particles/sparkles_main.dds"
@@ -101,7 +96,6 @@ local function criarEfeitoRaios(character, config)
         particleEmitter.Enabled = true
     end
     
-    -- Criar Highlight (brilho)
     if not character:FindFirstChild("Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Parent = character
@@ -117,7 +111,6 @@ local function criarEfeitoRaios(character, config)
         highlight.OutlineTransparency = 0.1
     end
     
-    -- Criar trails nos braços e pernas
     for _, part in pairs(character:GetDescendants()) do
         if (part.Name == "LeftHand" or part.Name == "RightHand" or 
             part.Name == "LeftFoot" or part.Name == "RightFoot") and part:IsA("BasePart") then
@@ -149,7 +142,6 @@ local function criarEfeitoRaios(character, config)
     EFEITOS_ATIVOS[character] = config
 end
 
--- Função para remover efeitos
 local function removerEfeito(character)
     if character:FindFirstChild("Highlight") then
         character.Highlight:Destroy()
@@ -163,7 +155,6 @@ local function removerEfeito(character)
     EFEITOS_ATIVOS[character] = nil
 end
 
--- Sincronizar efeitos para todos os jogadores
 if RemoteEfeitos then
     RemoteEfeitos.OnClientEvent:Connect(function(player, tipoEfeito, ativado)
         if player.Character then
@@ -176,7 +167,6 @@ if RemoteEfeitos then
     end)
 end
 
--- Função para disparar efeito para todos
 local function ativarEfeitoGlobal(tipoEfeito, ativado)
     if RemoteEfeitos then
         RemoteEfeitos:FireServer(LocalPlayer, tipoEfeito, ativado)
@@ -191,7 +181,6 @@ local function ativarEfeitoGlobal(tipoEfeito, ativado)
     end
 end
 
--- --- SISTEMA DE TELETRANSPORTE ---
 local function teleportarPara(targetPlayer)
     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         return false
@@ -201,14 +190,12 @@ local function teleportarPara(targetPlayer)
         return false
     end
     
-    -- Teleportar para a posição do alvo + um pouco acima para não ficar dentro dele
     local targetPos = targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0)
     LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos)
     
     return true
 end
 
--- Função para obter lista de jogadores
 local function obterListaJogadores()
     local lista = {}
     for _, p in pairs(Players:GetPlayers()) do
@@ -248,7 +235,6 @@ local PODERES_LISTA = {
     "Draedron's Tech", "Rocket Launcher"
 }
 
--- Variáveis de Estado
 local VELOCIDADE_PADRAO = 100
 local ATIVADO_SPEED = false
 local SILENT_AIM_ATIVADO = false
@@ -270,7 +256,14 @@ local LAUNCH_ATIVADO = false
 
 local FLY_SPEED = 50
 
--- VARIAVEIS E FUNCOES DE VOID LAUNCH
+local TOGGLE_SIZE = UDim2.new(0, 40, 0, 40)
+local TOGGLE_POSITION = UDim2.new(0, 10, 0.5, -20)
+local TOGGLE_ICON_ASSET = nil
+local TOGGLE_ICON_SIZE = UDim2.new(0, 20, 0, 20)
+local TOGGLE_DRAGGABLE = true
+local TOGGLE_SHOW_TEXT_IN_ICON = true
+local TOGGLE_LABEL_TEXT = "ABRIR"
+
 local LAUNCH_CONFIG = {
     TARGET_NAME = "kaiox_994:",
     VELOCITY = 0.1,
@@ -349,74 +342,376 @@ local function stopAllLaunches()
     end
 end
 
--- Criando a Interface (GUI)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SuperMenuManusV43"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
+
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 500, 0, 400)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.Position = UDim2.new(0.5, -280, 0.5, -210)
+MainFrame.Size = UDim2.new(0, 560, 0, 420)
 MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.BorderSizePixel = 2
-MainFrame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BorderSizePixel = 0
+MainFrame.ZIndex = 1
+
+local mfCorner = Instance.new("UICorner")
+mfCorner.CornerRadius = UDim.new(0, 10)
+mfCorner.Parent = MainFrame
+
+local mfStroke = Instance.new("UIStroke")
+mfStroke.Thickness = 1
+mfStroke.Color = Color3.fromRGB(40,40,40)
+mfStroke.Parent = MainFrame
+
+local mfGrad = Instance.new("UIGradient")
+mfGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(28,28,28)), ColorSequenceKeypoint.new(1, Color3.fromRGB(18,18,18))}
+mfGrad.Rotation = 90
+mfGrad.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "ELEMENTAL MENUS V4.3"
-Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.SourceSansBold
+Title.Text = "ELEMENTAL MENU V4.3"
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.TextYAlignment = Enum.TextYAlignment.Center
 
--- Botão de Abrir/Fechar
+local titleBg = Instance.new("Frame")
+titleBg.Parent = MainFrame
+titleBg.Size = UDim2.new(1, 0, 0, 40)
+titleBg.Position = UDim2.new(0,0,0,0)
+titleBg.BackgroundColor3 = Color3.fromRGB(35,35,35)
+titleBg.ZIndex = 2
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 8)
+titleCorner.Parent = titleBg
+
+local titleGrad = Instance.new("UIGradient")
+titleGrad.Parent = titleBg
+titleGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(50,50,50)), ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))}
+titleGrad.Rotation = 90
+
+Title.Parent = titleBg
+Title.ZIndex = 3
+
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = ScreenGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleButton.Position = UDim2.new(0, 10, 0.5, -20)
-ToggleButton.Size = UDim2.new(0, 120, 0, 40)
-ToggleButton.Text = "ABRIR MENU"
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Position = TOGGLE_POSITION
+ToggleButton.Size = TOGGLE_SIZE
+ToggleButton.Text = "MENU"
+ToggleButton.TextColor3 = Color3.fromRGB(245, 245, 245)
+ToggleButton.Font = Enum.Font.GothamSemibold
+ToggleButton.TextSize = 13
+ToggleButton.TextXAlignment = Enum.TextXAlignment.Center
+ToggleButton.TextYAlignment = Enum.TextYAlignment.Center
+ToggleButton.AutoButtonColor = false
+ToggleButton.TextScaled = true
+ToggleButton.TextWrapped = true
+
+local centerLabel = Instance.new("TextLabel")
+centerLabel.Name = "_CenterLabel"
+centerLabel.Parent = ToggleButton
+centerLabel.Size = UDim2.new(1,0,1,0)
+centerLabel.BackgroundTransparency = 1
+centerLabel.Text = TOGGLE_LABEL_TEXT or ToggleButton.Text
+centerLabel.TextColor3 = Color3.fromRGB(245,245,245)
+centerLabel.Font = Enum.Font.GothamSemibold
+centerLabel.TextScaled = true
+centerLabel.TextWrapped = true
+centerLabel.TextXAlignment = Enum.TextXAlignment.Center
+centerLabel.TextYAlignment = Enum.TextYAlignment.Center
+centerLabel.ZIndex = ToggleButton.ZIndex + 5
+ToggleButton.Text = ""
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.Parent = ToggleButton
+local function updateToggleCorner()
+    local sizeX = ToggleButton.AbsoluteSize.X
+    local sizeY = ToggleButton.AbsoluteSize.Y
+    local radius = math.floor(math.min(sizeX, sizeY) / 2)
+    toggleCorner.CornerRadius = UDim.new(0, radius)
+end
+ToggleButton:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateToggleCorner)
+task.defer(updateToggleCorner)
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Thickness = 1
+toggleStroke.Color = Color3.fromRGB(60,60,60)
+toggleStroke.Parent = ToggleButton
+toggleStroke.Transparency = 1
+
+local toggleGrad = Instance.new("UIGradient")
+toggleGrad.Parent = ToggleButton
+toggleGrad.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(30,30,30)), ColorSequenceKeypoint.new(1, Color3.fromRGB(20,20,20))}
+toggleGrad.Rotation = 90
+
+local Glow = Instance.new("Frame")
+Glow.Name = "InnerGlow"
+Glow.Parent = ToggleButton
+Glow.AnchorPoint = Vector2.new(0.5, 0.5)
+Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
+Glow.Size = UDim2.new(0.9, 0, 0.9, 0)
+Glow.BackgroundTransparency = 1
+Glow.ZIndex = ToggleButton.ZIndex
+local glowCorner = Instance.new("UICorner")
+glowCorner.Parent = Glow
+local function updateGlowCorner()
+    local sizeX = ToggleButton.AbsoluteSize.X * 0.9
+    local sizeY = ToggleButton.AbsoluteSize.Y * 0.9
+    local radius = math.floor(math.min(sizeX, sizeY) / 2)
+    glowCorner.CornerRadius = UDim.new(0, radius)
+end
+ToggleButton:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateGlowCorner)
+task.defer(updateGlowCorner)
+local glowStroke = Instance.new("UIStroke")
+glowStroke.Parent = Glow
+glowStroke.Thickness = 1
+glowStroke.Color = Color3.fromRGB(75,75,75)
+glowStroke.Transparency = 1
+Glow.ZIndex = ToggleButton.ZIndex - 1
+
+local arc = Instance.new("UIAspectRatioConstraint") arc.Parent = ToggleButton arc.AspectRatio = 1
+
+local pulseTween = nil
+local pulseInfo = TweenInfo.new(1.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+local function startPulse()
+    if pulseTween then pcall(function() pulseTween:Play() end) return end
+    pulseTween = TweenService:Create(glowStroke, pulseInfo, {Transparency = 0.6, Thickness = 1})
+    pcall(function() pulseTween:Play() end)
+end
+local function stopPulse()
+    if pulseTween then pcall(function() pulseTween:Cancel() pulseTween = nil glowStroke.Transparency = 1 glowStroke.Thickness = 1 end) end
+end
+
+do
+    local hoverTweenInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local uiScale = Instance.new("UIScale") uiScale.Parent = ToggleButton uiScale.Scale = 1
+    local normalStroke = toggleStroke.Color
+    local hoverColor = ToggleButton.BackgroundColor3:lerp(Color3.fromRGB(70,70,70), 0.2)
+    ToggleButton.MouseEnter:Connect(function()
+        pcall(function()
+            TweenService:Create(uiScale, hoverTweenInfo, {Scale = 1.12}):Play()
+            TweenService:Create(toggleStroke, hoverTweenInfo, {Color = hoverColor}):Play()
+        end)
+    end)
+    ToggleButton.MouseLeave:Connect(function()
+        pcall(function()
+            TweenService:Create(uiScale, hoverTweenInfo, {Scale = 1}):Play()
+            TweenService:Create(toggleStroke, hoverTweenInfo, {Color = normalStroke}):Play()
+        end)
+    end)
+end
+
+if TOGGLE_ICON_ASSET then
+    local icon = Instance.new("ImageLabel")
+    icon.Name = "ToggleIcon"
+    icon.Parent = ToggleButton
+    icon.Size = TOGGLE_ICON_SIZE
+    icon.AnchorPoint = Vector2.new(0.5, 0.5)
+    icon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    icon.BackgroundTransparency = 1
+    icon.Image = TOGGLE_ICON_ASSET
+    local icorner = Instance.new("UICorner")
+    icorner.Parent = icon
+    local function updateIconCorner()
+        local sizeX = icon.AbsoluteSize.X
+        local sizeY = icon.AbsoluteSize.Y
+        local radius = math.floor(math.min(sizeX, sizeY) / 2)
+        icorner.CornerRadius = UDim.new(0, radius)
+    end
+    icon:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateIconCorner)
+    task.defer(updateIconCorner)
+    ToggleButton.Text = ""
+    if TOGGLE_SHOW_TEXT_IN_ICON then
+        local label = Instance.new("TextLabel")
+        label.Name = "ToggleIconLabel"
+        label.Parent = ToggleButton
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.Text = TOGGLE_LABEL_TEXT
+        label.TextColor3 = Color3.fromRGB(245,245,245)
+        label.Font = Enum.Font.GothamSemibold
+        label.TextScaled = true
+        label.TextWrapped = true
+        label.TextXAlignment = Enum.TextXAlignment.Center
+        label.TextYAlignment = Enum.TextYAlignment.Center
+        label.ZIndex = icon.ZIndex + 1
+    end
+else
+    ToggleButton.TextXAlignment = Enum.TextXAlignment.Center
+end
+
+do
+    local dragging = false
+    local dragStart, startPos
+    local function update(input)
+        if not dragging then return end
+        local delta = input.Position - dragStart
+        ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    ToggleButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and TOGGLE_DRAGGABLE then
+            dragging = true
+            dragStart = input.Position
+            startPos = ToggleButton.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            pcall(update, input)
+        end
+    end)
+end
 
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
-    ToggleButton.Text = MainFrame.Visible and "FECHAR MENU" or "ABRIR MENU"
+    if not TOGGLE_ICON_ASSET then
+        ToggleButton.Text = ""
+        if centerLabel then
+            centerLabel.Text = MainFrame.Visible and "FECHAR" or (TOGGLE_LABEL_TEXT or "ABRIR")
+        end
+    end
 end)
 
--- Sistema de Abas
-local TabButtons = Instance.new("Frame")
+local TabButtons = Instance.new("ScrollingFrame")
 TabButtons.Parent = MainFrame
 TabButtons.Position = UDim2.new(0, 0, 0, 40)
-TabButtons.Size = UDim2.new(1, 0, 0, 35)
+TabButtons.Size = UDim2.new(1, 0, 0, 40)
 TabButtons.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TabButtons.ScrollBarThickness = 6
+TabButtons.HorizontalScrollBarInset = Enum.ScrollBarInset.Always
+TabButtons.CanvasSize = UDim2.new(0, 0, 0, 0)
+TabButtons.BorderSizePixel = 0
+
+local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0,6)
+tabCorner.Parent = TabButtons
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.Parent = TabButtons
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 6)
+
+tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    TabButtons.CanvasSize = UDim2.new(0, tabLayout.AbsoluteContentSize.X + 12, 0, 0)
+end)
+
+local function stylizeBtn(btn, baseColor)
+    if not btn then return end
+    btn.BackgroundColor3 = baseColor or Color3.fromRGB(40,40,40)
+    btn.TextColor3 = Color3.fromRGB(245,245,245)
+    btn.AutoButtonColor = false
+    local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0,6) corner.Parent = btn
+    local stroke = Instance.new("UIStroke") stroke.Thickness = 1 stroke.Color = Color3.fromRGB(30,30,30) stroke.Parent = btn
+    local tweenInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local prevColor = btn.BackgroundColor3
+    btn.MouseEnter:Connect(function()
+        prevColor = btn.BackgroundColor3
+        local c = btn.BackgroundColor3
+        local highlight = Color3.new(math.min(c.R + 0.12,1), math.min(c.G + 0.12,1), math.min(c.B + 0.12,1))
+        TweenService:Create(btn, tweenInfo, {BackgroundColor3 = highlight}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, tweenInfo, {BackgroundColor3 = prevColor}):Play()
+    end)
+end
 
 local function criarAbaBtn(nome, pos, total)
     local btn = Instance.new("TextButton")
     btn.Parent = TabButtons
-    local largura = 1 / total
-    btn.Size = UDim2.new(largura, 0, 1, 0)
-    btn.Position = UDim2.new(pos * largura, 0, 0, 0)
+    btn.Size = UDim2.new(0, 120, 1, 0)
     btn.Text = nome
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 13
+    btn.TextSize = 14
+    btn.TextScaled = false
+    btn.TextWrapped = false
+    btn.TextXAlignment = Enum.TextXAlignment.Center
+    stylizeBtn(btn, Color3.fromRGB(30,30,30))
     return btn
 end
 
-local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "Visuais Avançados", "Efeitos", "Teleporte", "Void Launch"}
+local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Informações do Dono"}
 local botoesAbas = {}
 for i, nome in ipairs(abas) do
     botoesAbas[nome] = criarAbaBtn(nome, i-1, #abas)
 end
+
+local RGB_ENABLED = true
+local RGB_SPEED = 0.25
+local rgbHue = 0
+local rgbConnection = nil
+
+local function enableRGB(enable)
+    RGB_ENABLED = enable
+    if enable and not rgbConnection then
+        rgbConnection = RunService.RenderStepped:Connect(function(dt)
+            rgbHue = (rgbHue + dt * RGB_SPEED) % 1
+            local c = Color3.fromHSV(rgbHue, 1, 1)
+            if mfStroke then pcall(function() mfStroke.Color = c end) end
+            if titleBg then pcall(function() titleBg.BackgroundColor3 = c:lerp(Color3.fromRGB(35,35,35), 0.7) end) end
+            if TabButtons then
+                for _, child in pairs(TabButtons:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        local stroke = child:FindFirstChildOfClass("UIStroke")
+                        if stroke then pcall(function() stroke.Color = c end) end
+                    end
+                end
+            end
+            local tstroke = ToggleButton and ToggleButton:FindFirstChildOfClass("UIStroke")
+            if tstroke then pcall(function() tstroke.Color = c end) end
+            if glowStroke then pcall(function() glowStroke.Color = c end) end
+            if centerLabel then pcall(function()
+                local lum = 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B
+                centerLabel.TextColor3 = lum > 0.6 and Color3.fromRGB(10,10,10) or Color3.fromRGB(245,245,245)
+            end) end
+        end)
+    elseif not enable and rgbConnection then
+        rgbConnection:Disconnect()
+        rgbConnection = nil
+        if mfStroke then mfStroke.Color = Color3.fromRGB(40,40,40) end
+        if titleBg then titleBg.BackgroundColor3 = Color3.fromRGB(35,35,35) end
+        if TabButtons then
+            for _, child in pairs(TabButtons:GetChildren()) do
+                if child:IsA("TextButton") then
+                    local stroke = child:FindFirstChildOfClass("UIStroke")
+                    if stroke then stroke.Color = Color3.fromRGB(30,30,30) end
+                end
+            end
+        end
+        local tstroke = ToggleButton and ToggleButton:FindFirstChildOfClass("UIStroke")
+        if tstroke then tstroke.Color = Color3.fromRGB(50,50,50) end
+    end
+end
+
+enableRGB(RGB_ENABLED)
+
+task.spawn(function()
+    while true do
+        task.wait(2)
+        if RGB_ENABLED and not rgbConnection then
+            pcall(function() enableRGB(true) end)
+        end
+    end
+end)
 
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Parent = MainFrame
@@ -449,10 +744,10 @@ local function criarToggle(parent, texto, estado, callback)
     end)
     
     atualizar()
+    stylizeBtn(btn)
     return btn
 end
 
--- --- ABA PODERES ---
 local function showPoderes()
     limparConteudo()
     local scroll = Instance.new("ScrollingFrame")
@@ -473,6 +768,7 @@ local function showPoderes()
     btnUnlockAll.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
     btnUnlockAll.TextColor3 = Color3.new(1, 1, 1)
     btnUnlockAll.Font = Enum.Font.SourceSansBold
+    stylizeBtn(btnUnlockAll, Color3.fromRGB(0,120,0))
     
     btnUnlockAll.MouseButton1Click:Connect(function()
         local RE = gRE()
@@ -490,6 +786,7 @@ local function showPoderes()
         btn.Text = nome
         btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         btn.TextColor3 = Color3.new(1, 1, 1)
+        stylizeBtn(btn, Color3.fromRGB(50,50,50))
         btn.MouseButton1Click:Connect(function()
             local RE = gRE()
             if RE then RE:FireServer("equip_mystery_spell", nome) end
@@ -497,7 +794,6 @@ local function showPoderes()
     end
 end
 
--- --- ABA COMBATE ---
 local function showCombate()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -510,7 +806,6 @@ local function showCombate()
     criarToggle(ContentFrame, "GOD MODE", GOD_MODE_ATIVADO, function(v) GOD_MODE_ATIVADO = v end)
 end
 
--- --- ABA MOVIMENTO ---
 local function showMovimento()
     limparConteudo()
     local list = Instance.new("UIListLayout")
@@ -534,18 +829,21 @@ local function showMovimento()
     end)
 end
 
--- --- ABA FARM ---
 local function showFarm()
     limparConteudo()
     criarToggle(ContentFrame, "AUTO-COLLECT MOEDAS", AUTO_FARM_ATIVADO, function(v) AUTO_FARM_ATIVADO = v end)
 end
 
--- --- ABA VISUAL ---
 local function showVisual()
     limparConteudo()
     local list = Instance.new("UIListLayout")
     list.Parent = ContentFrame
     list.Padding = UDim.new(0, 8)
+
+    criarToggle(ContentFrame, "MENU RGB (Cores)", RGB_ENABLED, function(v)
+        RGB_ENABLED = v
+        enableRGB(v)
+    end)
 
     criarToggle(ContentFrame, "ESP HIGHLIGHT (Brilho)", ESP_ATIVADO, function(v) 
         ESP_ATIVADO = v 
@@ -638,6 +936,7 @@ local function showEfeitos()
         btn.TextColor3 = Color3.new(1, 1, 1)
         btn.Font = Enum.Font.SourceSansBold
         btn.TextSize = 14
+        stylizeBtn(btn, Color3.fromRGB(50,50,100))
         
         btn.MouseButton1Click:Connect(function()
             EFEITO_SELECIONADO = nomeEfeito
@@ -712,6 +1011,7 @@ local function showTeleporte()
                 btn.Font = Enum.Font.SourceSansBold
                 btn.TextSize = 14
                 btn.BorderSizePixel = 0
+                stylizeBtn(btn, Color3.fromRGB(0,100,150))
                 
                 btn.MouseButton1Click:Connect(function()
                     local sucesso = teleportarPara(jogador)
@@ -789,6 +1089,7 @@ local function showVoidLaunch()
                 btn.Font = Enum.Font.SourceSansBold
                 btn.TextSize = 14
                 btn.BorderSizePixel = 0
+                stylizeBtn(btn, Color3.fromRGB(200,100,0))
                 
                 btn.MouseButton1Click:Connect(function()
                     launchPlayer(jogador)
@@ -809,10 +1110,112 @@ botoesAbas["Combate"].MouseButton1Click:Connect(showCombate)
 botoesAbas["Movimento"].MouseButton1Click:Connect(showMovimento)
 botoesAbas["Farm"].MouseButton1Click:Connect(showFarm)
 botoesAbas["Visual"].MouseButton1Click:Connect(showVisual)
-botoesAbas["Visuais Avançados"].MouseButton1Click:Connect(showVisuaisAvancados)
+botoesAbas["mapa"].MouseButton1Click:Connect(showVisuaisAvancados)
 botoesAbas["Efeitos"].MouseButton1Click:Connect(showEfeitos)
 botoesAbas["Teleporte"].MouseButton1Click:Connect(showTeleporte)
 botoesAbas["Void Launch"].MouseButton1Click:Connect(showVoidLaunch)
+
+local function showDono()
+    limparConteudo()
+
+    local container = Instance.new("Frame")
+    container.Parent = ContentFrame
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+
+    local panel = Instance.new("Frame")
+    panel.Parent = container
+    panel.Size = UDim2.new(1, 0, 1, 0)
+    panel.Position = UDim2.new(0, 0, 0, 0)
+    panel.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+    panel.BorderSizePixel = 0
+
+    local panelCorner = Instance.new("UICorner")
+    panelCorner.CornerRadius = UDim.new(0, 8)
+    panelCorner.Parent = panel
+
+    local panelPadding = Instance.new("UIPadding")
+    panelPadding.PaddingTop = UDim.new(0, 10)
+    panelPadding.PaddingLeft = UDim.new(0, 10)
+    panelPadding.PaddingRight = UDim.new(0, 10)
+    panelPadding.PaddingBottom = UDim.new(0, 10)
+    panelPadding.Parent = panel
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = panel
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel")
+    title.Parent = panel
+    title.Size = UDim2.new(1, 0, 0, 36)
+    title.BackgroundTransparency = 1
+    title.Text = "INFORMAÇÕES DO DONO"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextColor3 = Color3.fromRGB(245, 245, 245)
+    title.TextXAlignment = Enum.TextXAlignment.Center
+
+    local function makeRow(heading, value)
+        local row = Instance.new("Frame")
+        row.Parent = panel
+        row.Size = UDim2.new(1, 0, 0, 48)
+        row.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+        row.BorderSizePixel = 0
+
+        local rc = Instance.new("UICorner") rc.CornerRadius = UDim.new(0, 6) rc.Parent = row
+
+        local left = Instance.new("TextLabel")
+        left.Parent = row
+        left.Size = UDim2.new(0.38, -8, 1, 0)
+        left.Position = UDim2.new(0, 8, 0, 0)
+        left.BackgroundTransparency = 1
+        left.Text = heading
+        left.Font = Enum.Font.SourceSansSemibold
+        left.TextSize = 14
+        left.TextColor3 = Color3.fromRGB(200, 200, 200)
+        left.TextXAlignment = Enum.TextXAlignment.Left
+
+        local right = Instance.new("TextLabel")
+        right.Parent = row
+        right.Size = UDim2.new(0.62, -12, 1, 0)
+        right.Position = UDim2.new(0.38, 0, 0, 0)
+        right.BackgroundTransparency = 1
+        right.Text = value
+        right.Font = Enum.Font.Gotham
+        right.TextSize = 14
+        right.TextColor3 = Color3.fromRGB(245, 245, 245)
+        right.TextXAlignment = Enum.TextXAlignment.Left
+        right.TextWrapped = true
+
+        return row
+    end
+
+    makeRow("Criado por", "davymods")
+    makeRow("Contato", "discord.gg/davy102  •  +55 94 9185-5060")
+    makeRow("Redes", "Instagram: davyf22l1  •  TikTok: drak_ylon")
+
+    local descRow = Instance.new("Frame")
+    descRow.Parent = panel
+    descRow.Size = UDim2.new(1, 0, 0, 80)
+    descRow.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+    descRow.BorderSizePixel = 0
+    local descCorner = Instance.new("UICorner") descCorner.CornerRadius = UDim.new(0,6) descCorner.Parent = descRow
+
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Parent = descRow
+    descLabel.Size = UDim2.new(1, -16, 1, -12)
+    descLabel.Position = UDim2.new(0, 8, 0, 6)
+    descLabel.BackgroundTransparency = 1
+    descLabel.Text = "Sejam bem-vindos ao ELEMENTAL MENU — aproveitem as funcionalidades do ELEMENTAL POWERS TYCOON e divirtam-se!"
+    descLabel.TextWrapped = true
+    descLabel.Font = Enum.Font.SourceSans
+    descLabel.TextSize = 14
+    descLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+
+end
+
+botoesAbas["Informações do Dono"].MouseButton1Click:Connect(showDono)
 
 
 local function getClosestPlayer()
