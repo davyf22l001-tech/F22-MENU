@@ -698,7 +698,7 @@ local function criarAbaBtn(nome, pos, total)
     return btn
 end
 
-local abas = {"Poderes", "Combate", "Caos", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Atualizações", "Informações do Dono"}
+local abas = {"Poderes", "Combate", "Caos", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Atualizações", "Site", "Informações do Dono"}
 local botoesAbas = {}
 for i, nome in ipairs(abas) do
     botoesAbas[nome] = criarAbaBtn(nome, i-1, #abas)
@@ -939,7 +939,20 @@ local function showCombate()
     local list = Instance.new("UIListLayout")
     list.Parent = ContentFrame
     list.Padding = UDim.new(0, 8)
-    
+    ----------aba conbate---------------------------
+    local betaTagCombate = Instance.new("TextLabel")
+    betaTagCombate.Parent = ContentFrame
+    betaTagCombate.Size = UDim2.new(0, 120, 0, 24)
+    betaTagCombate.Position = UDim2.new(1, -130, 0, 10)
+    betaTagCombate.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    betaTagCombate.TextColor3 = Color3.fromRGB(255,255,255)
+    betaTagCombate.Font = Enum.Font.SourceSansBold
+    betaTagCombate.TextSize = 14
+    betaTagCombate.Text = "BETA"
+    betaTagCombate.TextXAlignment = Enum.TextXAlignment.Center
+    betaTagCombate.TextYAlignment = Enum.TextYAlignment.Center
+    local betaCornerCombate = Instance.new("UICorner") betaCornerCombate.CornerRadius = UDim.new(0,6) betaCornerCombate.Parent = betaTagCombate
+    ------------------------------------------------------
     criarToggle(ContentFrame, "ULTRA NO COOLDOWN (Agressivo)", NO_COOLDOWN_ATIVADO, function(v) NO_COOLDOWN_ATIVADO = v end)
     criarToggle(ContentFrame, "SILENT AIM (Mira Invisível)", SILENT_AIM_ATIVADO, function(v) SILENT_AIM_ATIVADO = v end)
     criarToggle(ContentFrame, "KILL AURA", KILL_AURA_ATIVADO, function(v) KILL_AURA_ATIVADO = v end)
@@ -1452,10 +1465,63 @@ local function showAtualizacoes()
     makeSection("O que foi corrigido:", corrigidos)
 end
 
+local function showSite()
+    limparConteudo()
+
+    local container = Instance.new("Frame")
+    container.Parent = ContentFrame
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = container
+    btn.Size = UDim2.new(0, 300, 0, 40)
+    btn.Position = UDim2.new(0.5, -150, 0.5, -20)
+    btn.Text = "Abrir site"
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 18
+    btn.TextColor3 = Color3.fromRGB(245,245,245)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    stylizeBtn(btn, Color3.fromRGB(0,120,255))
+
+    local url = "https://elemental-menu.netlify.app/"
+
+    btn.MouseButton1Click:Connect(function()
+        local opened = false
+        pcall(function()
+            local GuiService = game:GetService("GuiService")
+            if GuiService and GuiService.OpenBrowserWindow then
+                GuiService:OpenBrowserWindow(url)
+                opened = true
+            end
+        end)
+
+        if not opened then
+            pcall(function()
+                if setclipboard then setclipboard(url) opened = true end
+            end)
+        end
+
+        local info = Instance.new("TextLabel")
+        info.Parent = container
+        info.Size = UDim2.new(0, 360, 0, 28)
+        info.Position = UDim2.new(0.5, -180, 0.5, 30)
+        info.BackgroundTransparency = 1
+        info.Font = Enum.Font.SourceSans
+        info.TextSize = 14
+        info.TextColor3 = Color3.fromRGB(220,220,220)
+        if opened then
+            info.Text = "Link copiado para a área de transferência."
+        else
+            info.Text = "Link copiado"
+        end
+        task.delay(2, function() if info and info.Parent then info:Destroy() end end)
+    end)
+end
+
 local function showCaos()
     limparConteudo()
 
-    -- cleanup legacy multiline TextBoxes that may show code
     pcall(function()
         if ScreenGui then
             for _, d in pairs(ScreenGui:GetDescendants()) do
@@ -1479,15 +1545,29 @@ local function showCaos()
     info.Size = UDim2.new(1, -20, 0, 60)
     info.Position = UDim2.new(0, 10, 0, 10)
     info.BackgroundTransparency = 1
-    info.Text = "AUTO-ATTACK: teleporta para o jogador mais próximo e ataca automaticamente. Use o botão abaixo para ativar/desativar."
+    info.Text = "AUTO-ATTACK: teleporta para jogadores e ataca automaticamente. Escolha modo e alvo abaixo."
     info.Font = Enum.Font.SourceSans
     info.TextSize = 14
     info.TextColor3 = Color3.fromRGB(235,235,235)
     info.TextWrapped = true
-
+    
+--------aba beta auto-attack--------
+    local betaTag = Instance.new("TextLabel")
+    betaTag.Parent = scroll
+    betaTag.Size = UDim2.new(0, 120, 0, 24)
+    betaTag.Position = UDim2.new(1, -130, 0, 12)
+    betaTag.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+    betaTag.TextColor3 = Color3.fromRGB(255,255,255)
+    betaTag.Font = Enum.Font.SourceSansBold
+    betaTag.TextSize = 14
+    betaTag.Text = "BETA"
+    betaTag.TextXAlignment = Enum.TextXAlignment.Center
+    betaTag.TextYAlignment = Enum.TextYAlignment.Center
+    local betaCorner = Instance.new("UICorner") betaCorner.CornerRadius = UDim.new(0,6) betaCorner.Parent = betaTag
+------------------------------------
     local G = (getgenv and getgenv()) or _G
     if not G.AUTO_ATTACK_CONTROLLER then
-        G.AUTO_ATTACK_CONTROLLER = {running = false, threads = {}, velocidade = 0.1}
+        G.AUTO_ATTACK_CONTROLLER = {running = false, threads = {}, velocidade = 0.1, useSpecific = false, selectedTarget = nil}
     end
     local controller = G.AUTO_ATTACK_CONTROLLER
 
@@ -1499,6 +1579,21 @@ local function showCaos()
         return ReplicatedStorage:FindFirstChild("RemoteEvent")
     end
 
+    local function getClosestPlayerFromChar(char)
+        local PlayersS = game:GetService("Players")
+        local lp = PlayersS.LocalPlayer
+        local target = nil
+        local dist = math.huge
+        if not (char and char:FindFirstChild("HumanoidRootPart")) then return nil end
+        for _, p in pairs(PlayersS:GetPlayers()) do
+            if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                local d = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                if d < dist then dist = d target = p end
+            end
+        end
+        return target
+    end
+
     local function attackLoop()
         while controller.running do
             local PlayersS = game:GetService("Players")
@@ -1506,13 +1601,20 @@ local function showCaos()
             local char = lp and lp.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
                 local target = nil
-                local dist = math.huge
-                for _, p in pairs(PlayersS:GetPlayers()) do
-                    if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-                        local d = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
-                        if d < dist then dist = d target = p end
+
+                if controller.useSpecific and controller.selectedTarget then
+                    local p = controller.selectedTarget
+                    if p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                        target = p
+                    else
+                        controller.selectedTarget = nil
                     end
                 end
+
+                if not target then
+                    target = getClosestPlayerFromChar(char)
+                end
+
                 if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                     pcall(function()
                         char.HumanoidRootPart.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + Vector3.new(0,3,0))
@@ -1555,6 +1657,92 @@ local function showCaos()
     toggleBtn.TextSize = 14
     stylizeBtn(toggleBtn)
 
+    local modeBtn = Instance.new("TextButton")
+    modeBtn.Parent = scroll
+    modeBtn.Size = UDim2.new(1, -20, 0, 28)
+    modeBtn.Position = UDim2.new(0, 10, 0, 126)
+    modeBtn.Font = Enum.Font.SourceSans
+    modeBtn.TextSize = 14
+    stylizeBtn(modeBtn)
+
+    local selectedLabel = Instance.new("TextLabel")
+    selectedLabel.Parent = scroll
+    selectedLabel.Size = UDim2.new(1, -20, 0, 24)
+    selectedLabel.Position = UDim2.new(0, 10, 0, 162)
+    selectedLabel.BackgroundTransparency = 1
+    selectedLabel.Font = Enum.Font.SourceSans
+    selectedLabel.TextSize = 14
+    selectedLabel.TextColor3 = Color3.fromRGB(235,235,235)
+    selectedLabel.TextXAlignment = Enum.TextXAlignment.Left
+    selectedLabel.Text = "Alvo: Nenhum"
+
+    local playersList = Instance.new("ScrollingFrame")
+    playersList.Parent = scroll
+    playersList.Size = UDim2.new(1, -20, 0, 160)
+    playersList.Position = UDim2.new(0, 10, 0, 196)
+    playersList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    playersList.ScrollBarThickness = 6
+    playersList.BackgroundTransparency = 1
+    playersList.BorderSizePixel = 0
+
+    local refreshBtn = Instance.new("TextButton")
+    refreshBtn.Parent = scroll
+    refreshBtn.Size = UDim2.new(0, 120, 0, 28)
+    refreshBtn.Position = UDim2.new(1, -130, 0, 360)
+    refreshBtn.Font = Enum.Font.SourceSans
+    refreshBtn.TextSize = 14
+    refreshBtn.Text = "Atualizar lista"
+    stylizeBtn(refreshBtn)
+
+    local function clearPlayerList()
+        for _, c in pairs(playersList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+    end
+
+    local function updatePlayerList()
+        clearPlayerList()
+        local y = 0
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                local btn = Instance.new("TextButton")
+                btn.Parent = playersList
+                btn.Size = UDim2.new(1, -8, 0, 28)
+                btn.Position = UDim2.new(0, 4, 0, y)
+                btn.Font = Enum.Font.SourceSans
+                btn.TextSize = 14
+                btn.Text = p.Name
+                btn.BackgroundTransparency = 0.4
+                btn.TextColor3 = Color3.fromRGB(235,235,235)
+                btn.MouseButton1Click:Connect(function()
+                    controller.selectedTarget = p
+                    controller.useSpecific = true
+                    selectedLabel.Text = "Alvo: " .. p.Name
+                    modeBtn.Text = "Modo: Alvo Específico"
+                end)
+                y = y + 32
+            end
+        end
+        playersList.CanvasSize = UDim2.new(0, 0, 0, y)
+    end
+
+    refreshBtn.MouseButton1Click:Connect(updatePlayerList)
+
+    modeBtn.MouseButton1Click:Connect(function()
+        controller.useSpecific = not controller.useSpecific
+        if controller.useSpecific then
+            modeBtn.Text = "Modo: Alvo Específico"
+            if controller.selectedTarget then
+                selectedLabel.Text = "Alvo: " .. tostring(controller.selectedTarget.Name)
+            else
+                selectedLabel.Text = "Alvo: Nenhum"
+            end
+        else
+            modeBtn.Text = "Modo: Próximo"
+            selectedLabel.Text = "Alvo: Nenhum"
+        end
+    end)
+
     local function updateToggleLabel()
         toggleBtn.Text = (controller.running and "Desativar AUTO-ATTACK" or "Ativar AUTO-ATTACK")
         toggleBtn.BackgroundColor3 = (controller.running and Color3.fromRGB(0,120,0) or Color3.fromRGB(120,0,0))
@@ -1581,7 +1769,18 @@ local function showCaos()
         end
     end)
 
+    updatePlayerList()
     updateToggleLabel()
+
+    Players.PlayerAdded:Connect(function() task.wait(0.5) updatePlayerList() end)
+    Players.PlayerRemoving:Connect(function(p)
+        if controller.selectedTarget and controller.selectedTarget == p then
+            controller.selectedTarget = nil
+            selectedLabel.Text = "Alvo: Nenhum"
+        end
+        task.wait(0.5)
+        updatePlayerList()
+    end)
 end
 
 botoesAbas["Poderes"].MouseButton1Click:Connect(showPoderes)
@@ -1595,6 +1794,7 @@ botoesAbas["Efeitos"].MouseButton1Click:Connect(showEfeitos)
 botoesAbas["Teleporte"].MouseButton1Click:Connect(showTeleporte)
 botoesAbas["Void Launch"].MouseButton1Click:Connect(showVoidLaunch)
 botoesAbas["Atualizações"].MouseButton1Click:Connect(showAtualizacoes)
+botoesAbas["Site"].MouseButton1Click:Connect(showSite)
 
 local function showDono()
     limparConteudo()
