@@ -649,7 +649,7 @@ local function criarAbaBtn(nome, pos, total)
     return btn
 end
 
-local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Informações do Dono"}
+local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Atualizações", "Informações do Dono"}
 local botoesAbas = {}
 for i, nome in ipairs(abas) do
     botoesAbas[nome] = criarAbaBtn(nome, i-1, #abas)
@@ -1307,6 +1307,89 @@ local function showVoidLaunch()
     end
 end
 
+local function showAtualizacoes()
+    limparConteudo()
+
+    local container = Instance.new("Frame")
+    container.Parent = ContentFrame
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+
+    local panel = Instance.new("Frame")
+    panel.Parent = container
+    panel.Size = UDim2.new(1, 0, 1, 0)
+    panel.Position = UDim2.new(0, 0, 0, 0)
+    panel.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+    panel.BorderSizePixel = 0
+
+    local panelCorner = Instance.new("UICorner")
+    panelCorner.CornerRadius = UDim.new(0, 8)
+    panelCorner.Parent = panel
+
+    local panelPadding = Instance.new("UIPadding")
+    panelPadding.PaddingTop = UDim.new(0, 10)
+    panelPadding.PaddingLeft = UDim.new(0, 10)
+    panelPadding.PaddingRight = UDim.new(0, 10)
+    panelPadding.PaddingBottom = UDim.new(0, 10)
+    panelPadding.Parent = panel
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = panel
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel")
+    title.Parent = panel
+    title.Size = UDim2.new(1, 0, 0, 36)
+    title.BackgroundTransparency = 1
+    title.Text = "ATUALIZAÇÕES"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextColor3 = Color3.fromRGB(245, 245, 245)
+    title.TextXAlignment = Enum.TextXAlignment.Center
+
+    local function makeSection(heading, text)
+        local sec = Instance.new("Frame")
+        sec.Parent = panel
+        sec.Size = UDim2.new(1, 0, 0, 120)
+        sec.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
+        sec.BorderSizePixel = 0
+
+        local rc = Instance.new("UICorner") rc.CornerRadius = UDim.new(0, 6) rc.Parent = sec
+
+        local h = Instance.new("TextLabel")
+        h.Parent = sec
+        h.Size = UDim2.new(1, -16, 0, 28)
+        h.Position = UDim2.new(0, 8, 0, 8)
+        h.BackgroundTransparency = 1
+        h.Text = heading
+        h.Font = Enum.Font.SourceSansSemibold
+        h.TextSize = 16
+        h.TextColor3 = Color3.fromRGB(220,220,220)
+        h.TextXAlignment = Enum.TextXAlignment.Left
+
+        local body = Instance.new("TextLabel")
+        body.Parent = sec
+        body.Size = UDim2.new(1, -16, 1, -44)
+        body.Position = UDim2.new(0, 8, 0, 40)
+        body.BackgroundTransparency = 1
+        body.Text = text
+        body.Font = Enum.Font.SourceSans
+        body.TextSize = 14
+        body.TextColor3 = Color3.fromRGB(235,235,235)
+        body.TextWrapped = true
+        body.TextXAlignment = Enum.TextXAlignment.Left
+
+        return sec
+    end
+
+    local adicionados = "- Nova aba 'Atualizações'\n- Função de farm adicionada na aba 'Farm'\n- Melhoria no sistema de abas para scroll"
+    local corrigidos = "- Corrigido bug de teleporte que causava queda\n- Ajuste no No-Clip\n- Correções menores de UI"
+
+    makeSection("O que foi adicionado:", adicionados)
+    makeSection("O que foi corrigido:", corrigidos)
+end
+
 botoesAbas["Poderes"].MouseButton1Click:Connect(showPoderes)
 botoesAbas["Combate"].MouseButton1Click:Connect(showCombate)
 botoesAbas["Movimento"].MouseButton1Click:Connect(showMovimento)
@@ -1316,6 +1399,7 @@ botoesAbas["mapa"].MouseButton1Click:Connect(showVisuaisAvancados)
 botoesAbas["Efeitos"].MouseButton1Click:Connect(showEfeitos)
 botoesAbas["Teleporte"].MouseButton1Click:Connect(showTeleporte)
 botoesAbas["Void Launch"].MouseButton1Click:Connect(showVoidLaunch)
+botoesAbas["Atualizações"].MouseButton1Click:Connect(showAtualizacoes)
 
 local function showDono()
     limparConteudo()
