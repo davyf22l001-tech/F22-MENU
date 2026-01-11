@@ -116,64 +116,113 @@ local function criarEfeitoRaios(character, config)
             part.Name == "LeftFoot" or part.Name == "RightFoot") and part:IsA("BasePart") then
             
             if not part:FindFirstChild("TrailAttachment0") then
-                local attachment0 = Instance.new("Attachment")
-                attachment0.Name = "TrailAttachment0"
-                attachment0.Parent = part
-                
-                local attachment1 = Instance.new("Attachment")
-                attachment1.Name = "TrailAttachment1"
-                attachment1.Parent = part
-                
-                local trail = Instance.new("Trail")
-                trail.Attachment0 = attachment0
-                trail.Attachment1 = attachment1
-                trail.Parent = part
-                trail.Color = ColorSequence.new(config.cor)
-                trail.Lifetime = 0.5
-                trail.MinLength = 0
-                trail.Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 0),
-                    NumberSequenceKeypoint.new(1, 1)
-                })
+                local info = Instance.new("TextLabel")
+                info.Parent = scroll
+                info.Size = UDim2.new(1, -20, 0, 60)
+                info.Position = UDim2.new(0, 10, 0, 10)
+                info.BackgroundTransparency = 1
+                info.Text = "AUTO-ATTACK: teleporta para o jogador mais próximo e ataca automaticamente. Use o botão abaixo para ativar/desativar."
+                info.Font = Enum.Font.SourceSans
+                info.TextSize = 14
+                info.TextColor3 = Color3.fromRGB(235,235,235)
+                info.TextWrapped = true
+
+                local G = (getgenv and getgenv()) or _G
+                if G.AUTO_ATTACK == nil then G.AUTO_ATTACK = false end
+                local started = false
+
+                local toggleBtn = Instance.new("TextButton")
+                toggleBtn.Parent = ContentFrame
+                toggleBtn.Size = UDim2.new(0, 220, 0, 36)
+                toggleBtn.Position = UDim2.new(1, -230, 0, 0)
+                toggleBtn.Text = (G.AUTO_ATTACK and "Desativar AUTO-ATTACK" or "Ativar AUTO-ATTACK")
+                toggleBtn.Font = Enum.Font.SourceSansBold
+                toggleBtn.TextSize = 14
+                toggleBtn.BackgroundColor3 = G.AUTO_ATTACK and Color3.fromRGB(0,120,0) or Color3.fromRGB(120,0,0)
+                stylizeBtn(toggleBtn)
+
+                local VELOCIDADE_CLICK = 0.1
+
+                local function getCharacter()
+                    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                end
+
+                local function getClosestPlayer()
+                    local target = nil
+                    local dist = math.huge
+                    local char = LocalPlayer.Character
+                    if not (char and char:FindFirstChild("HumanoidRootPart")) then return nil end
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                            local d = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                            if d < dist then
+                                dist = d
+                                target = p
+                            end
+                        end
+                    end
+                    return target
+                end
+
+                local function startLoops()
+                    if started then return end
+                    started = true
+
+                    task.spawn(function()
+                        while true do
+                            if G.AUTO_ATTACK then
+                                local char = getCharacter()
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    local target = getClosestPlayer()
+                                    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                                        pcall(function()
+                                            char.HumanoidRootPart.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0))
+                                        end)
+                                    end
+                                end
+
+                                local tool = LocalPlayer.Backpack:FindFirstChildOfClass("Tool") or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool"))
+                                if tool and LocalPlayer.Character then
+                                    if tool.Parent ~= LocalPlayer.Character then
+                                        LocalPlayer.Character.Humanoid:EquipTool(tool)
+                                    end
+                                    pcall(function() tool:Activate() end)
+                                end
+
+                                task.wait(VELOCIDADE_CLICK)
+                            else
+                                task.wait(0.25)
+                            end
+                        end
+                    end)
+
+                    task.spawn(function()
+                        local magias = {"Dark Flames", "Draedron's Tech", "Yoru", "Plasma Orbs", "Undead Staff","Sonic Barrage", "Rebound Rlast","sonic boom","Super Sonic Wave","Tesseract","Tesla Turret","Twin-Photon Blast","Hyper Slash","Photon Blast","Sonic Twister","Nuclear Spore","Pine Burst","Nature's Wrath","Warp Bomb","Time Trap","Tempo Beam","Fire Bomb","Comet","Combust","Fire Shower","Elysian Beam","Shadow Sword","Dark Hold"}
+                        while true do
+                            if G.AUTO_ATTACK then
+                                if RemoteEvent then
+                                    local magiaSorteada = magias[math.random(1, #magias)]
+                                    pcall(function()
+                                        RemoteEvent:FireServer("equip_mystery_spell", magiaSorteada)
+                                        local mousePos = LocalPlayer:GetMouse().Hit.p
+                                        RemoteEvent:FireServer("cast_spell", magiaSorteada, mousePos)
+                                    end)
+                                end
+                                task.wait(1)
+                            else
+                                task.wait(0.5)
+                            end
+                        end
+                    end)
+                end
+
+                toggleBtn.MouseButton1Click:Connect(function()
+                    G.AUTO_ATTACK = not G.AUTO_ATTACK
+                    toggleBtn.Text = (G.AUTO_ATTACK and "Desativar AUTO-ATTACK" or "Ativar AUTO-ATTACK")
+                    toggleBtn.BackgroundColor3 = G.AUTO_ATTACK and Color3.fromRGB(0,120,0) or Color3.fromRGB(120,0,0)
+                    if G.AUTO_ATTACK then startLoops() end
+                end)
             end
-        end
-    end
-    
-    EFEITOS_ATIVOS[character] = config
-end
-
-local function removerEfeito(character)
-    if character:FindFirstChild("Highlight") then
-        character.Highlight:Destroy()
-    end
-    
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if rootPart and rootPart:FindFirstChild("EfeitoAttachment") then
-        rootPart.EfeitoAttachment:Destroy()
-    end
-    
-    EFEITOS_ATIVOS[character] = nil
-end
-
-if RemoteEfeitos then
-    RemoteEfeitos.OnClientEvent:Connect(function(player, tipoEfeito, ativado)
-        if player.Character then
-            if ativado and EFEITOS_CONFIG[tipoEfeito] then
-                criarEfeitoRaios(player.Character, EFEITOS_CONFIG[tipoEfeito])
-            else
-                removerEfeito(player.Character)
-            end
-        end
-    end)
-end
-
-local function ativarEfeitoGlobal(tipoEfeito, ativado)
-    if RemoteEfeitos then
-        RemoteEfeitos:FireServer(LocalPlayer, tipoEfeito, ativado)
-    end
-    
-    if LocalPlayer.Character and EFEITOS_CONFIG[tipoEfeito] then
-        if ativado then
             criarEfeitoRaios(LocalPlayer.Character, EFEITOS_CONFIG[tipoEfeito])
         else
             removerEfeito(LocalPlayer.Character)
@@ -649,7 +698,7 @@ local function criarAbaBtn(nome, pos, total)
     return btn
 end
 
-local abas = {"Poderes", "Combate", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Atualizações", "Informações do Dono"}
+local abas = {"Poderes", "Combate", "Caos", "Movimento", "Farm", "Visual", "mapa", "Efeitos", "Teleporte", "Void Launch", "Atualizações", "Informações do Dono"}
 local botoesAbas = {}
 for i, nome in ipairs(abas) do
     botoesAbas[nome] = criarAbaBtn(nome, i-1, #abas)
@@ -839,6 +888,19 @@ end
 
 local function showPoderes()
     limparConteudo()
+
+    -- remover TextBoxes legados (caso uma versão anterior tenha deixado o código na GUI)
+    pcall(function()
+        if ScreenGui then
+            for _, desc in pairs(ScreenGui:GetDescendants()) do
+                if desc:IsA("TextBox") and desc.MultiLine then
+                    if #tostring(desc.Text) > 50 then
+                        desc:Destroy()
+                    end
+                end
+            end
+        end
+    end)
     local scroll = Instance.new("ScrollingFrame")
     scroll.Parent = ContentFrame
     scroll.Size = UDim2.new(1, 0, 1, 0)
@@ -1383,15 +1445,148 @@ local function showAtualizacoes()
         return sec
     end
 
-    local adicionados = "- Nova aba 'Atualizações'\n- Função de farm adicionada na aba 'Farm'\n- Melhoria no sistema de abas para scroll"
+    local adicionados = "- Nova aba 'Atualizações'\n- Nova aba 'Caos' com AUTO-ATTACK integrado'\n- Melhoria no sistema de abas para scroll\n- Função de farm adicionada na aba 'Farm'"
     local corrigidos = "- Corrigido bug de teleporte que causava queda\n- Ajuste no No-Clip\n- Correções menores de UI"
 
     makeSection("O que foi adicionado:", adicionados)
     makeSection("O que foi corrigido:", corrigidos)
 end
 
+local function showCaos()
+    limparConteudo()
+
+    -- cleanup legacy multiline TextBoxes that may show code
+    pcall(function()
+        if ScreenGui then
+            for _, d in pairs(ScreenGui:GetDescendants()) do
+                if d:IsA("TextBox") and d.MultiLine and #tostring(d.Text) > 50 then
+                    d:Destroy()
+                end
+            end
+        end
+    end)
+
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Parent = ContentFrame
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 6
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+
+    local info = Instance.new("TextLabel")
+    info.Parent = scroll
+    info.Size = UDim2.new(1, -20, 0, 60)
+    info.Position = UDim2.new(0, 10, 0, 10)
+    info.BackgroundTransparency = 1
+    info.Text = "AUTO-ATTACK: teleporta para o jogador mais próximo e ataca automaticamente. Use o botão abaixo para ativar/desativar."
+    info.Font = Enum.Font.SourceSans
+    info.TextSize = 14
+    info.TextColor3 = Color3.fromRGB(235,235,235)
+    info.TextWrapped = true
+
+    local G = (getgenv and getgenv()) or _G
+    if not G.AUTO_ATTACK_CONTROLLER then
+        G.AUTO_ATTACK_CONTROLLER = {running = false, threads = {}, velocidade = 0.1}
+    end
+    local controller = G.AUTO_ATTACK_CONTROLLER
+
+    local function ensureRemoteEvent()
+        local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+        if remotes then
+            return remotes:FindFirstChild("RemoteEvent") or ReplicatedStorage:FindFirstChild("RemoteEvent")
+        end
+        return ReplicatedStorage:FindFirstChild("RemoteEvent")
+    end
+
+    local function attackLoop()
+        while controller.running do
+            local PlayersS = game:GetService("Players")
+            local lp = PlayersS.LocalPlayer
+            local char = lp and lp.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local target = nil
+                local dist = math.huge
+                for _, p in pairs(PlayersS:GetPlayers()) do
+                    if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                        local d = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                        if d < dist then dist = d target = p end
+                    end
+                end
+                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function()
+                        char.HumanoidRootPart.CFrame = CFrame.new(target.Character.HumanoidRootPart.Position + Vector3.new(0,3,0))
+                    end)
+                end
+
+                local tool = lp.Backpack:FindFirstChildOfClass("Tool") or (char and char:FindFirstChildOfClass("Tool"))
+                if tool and char then
+                    if tool.Parent ~= char then
+                        char.Humanoid:EquipTool(tool)
+                    end
+                    pcall(function() tool:Activate() end)
+                end
+            end
+            task.wait(controller.velocidade)
+        end
+    end
+
+    local function spellsLoop()
+        local magias = {"Dark Flames", "Draedron's Tech", "Yoru", "Plasma Orbs", "Undead Staff","Sonic Barrage", "Rebound Rlast","sonic boom","Super Sonic Wave","Tesseract","Tesla Turret","Twin-Photon Blast","Hyper Slash","Photon Blast","Sonic Twister","Nuclear Spore","Pine Burst","Nature's Wrath","Warp Bomb","Time Trap","Tempo Beam","Fire Bomb","Comet","Combust","Fire Shower","Elysian Beam","Shadow Sword","Dark Hold"}
+        while controller.running do
+            local re = ensureRemoteEvent()
+            if re then
+                local magiaSorteada = magias[math.random(1, #magias)]
+                pcall(function()
+                    re:FireServer("equip_mystery_spell", magiaSorteada)
+                    local mousePos = game:GetService("Players").LocalPlayer:GetMouse().Hit.p
+                    re:FireServer("cast_spell", magiaSorteada, mousePos)
+                end)
+            end
+            task.wait(1)
+        end
+    end
+
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Parent = scroll
+    toggleBtn.Size = UDim2.new(1, -20, 0, 36)
+    toggleBtn.Position = UDim2.new(0, 10, 0, 80)
+    toggleBtn.Font = Enum.Font.SourceSansBold
+    toggleBtn.TextSize = 14
+    stylizeBtn(toggleBtn)
+
+    local function updateToggleLabel()
+        toggleBtn.Text = (controller.running and "Desativar AUTO-ATTACK" or "Ativar AUTO-ATTACK")
+        toggleBtn.BackgroundColor3 = (controller.running and Color3.fromRGB(0,120,0) or Color3.fromRGB(120,0,0))
+    end
+
+    function controller.start()
+        if controller.running then return end
+        controller.running = true
+        updateToggleLabel()
+        controller.threads.attack = task.spawn(attackLoop)
+        controller.threads.spells = task.spawn(spellsLoop)
+    end
+
+    function controller.stop()
+        controller.running = false
+        updateToggleLabel()
+    end
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        if controller.running then
+            controller.stop()
+        else
+            controller.start()
+        end
+    end)
+
+    updateToggleLabel()
+end
+
 botoesAbas["Poderes"].MouseButton1Click:Connect(showPoderes)
 botoesAbas["Combate"].MouseButton1Click:Connect(showCombate)
+botoesAbas["Caos"].MouseButton1Click:Connect(showCaos)
 botoesAbas["Movimento"].MouseButton1Click:Connect(showMovimento)
 botoesAbas["Farm"].MouseButton1Click:Connect(showFarm)
 botoesAbas["Visual"].MouseButton1Click:Connect(showVisual)
