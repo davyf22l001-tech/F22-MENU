@@ -246,7 +246,7 @@ local ESP_LINHAS = false
 local ESP_NOMES = false
 local ESP_VIDA = false
 local AUTO_FARM_ATIVADO = false
-local ANTI_AFK_ATIVADO = true
+local ANTI_AFK_ATIVADO = false
 local KILL_AURA_ATIVADO = false
 local NO_CLIP_ATIVADO = false
 local NO_COOLDOWN_ATIVADO = false
@@ -432,7 +432,7 @@ centerLabel.TextWrapped = true
 centerLabel.TextXAlignment = Enum.TextXAlignment.Center
 centerLabel.TextYAlignment = Enum.TextYAlignment.Center
 centerLabel.ZIndex = ToggleButton.ZIndex + 5
-ToggleButton.Text = "" 
+ToggleButton.Text = ""
 
 local toggleCorner = Instance.new("UICorner")
 toggleCorner.Parent = ToggleButton
@@ -656,7 +656,7 @@ for i, nome in ipairs(abas) do
 end
 
 local RGB_ENABLED = true
-local RGB_SPEED = 0.25 
+local RGB_SPEED = 0.25
 local rgbHue = 0
 local rgbConnection = nil
 
@@ -907,9 +907,133 @@ local function showMovimento()
     end)
 end
 
+local AUTO_BUY_ENABLED = false
+local AUTO_COLLECT_RUNNING = false
+local AUTO_BUY_RUNNING = false
+
+local function autoCollectLoop()
+    while AUTO_FARM_ATIVADO do
+        task.wait(1)
+        local tycoon = Workspace:FindFirstChild("Tycoons") and Workspace.Tycoons:FindFirstChild(LocalPlayer.Name)
+        if tycoon and tycoon:FindFirstChild("Auxiliary") and tycoon.Auxiliary:FindFirstChild("Collector") and tycoon.Auxiliary.Collector:FindFirstChild("Collect") then
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character:PivotTo(tycoon.Auxiliary.Collector.Collect.CFrame)
+            end
+        end
+    end
+    AUTO_COLLECT_RUNNING = false
+end
+
+local function autoBuyLoop()
+    while AUTO_BUY_ENABLED do
+        task.wait(2)
+        local tycoon = Workspace:FindFirstChild("Tycoons") and Workspace.Tycoons:FindFirstChild(LocalPlayer.Name)
+        if tycoon and tycoon:FindFirstChild("Buttons") then
+            for _, button in pairs(tycoon.Buttons:GetChildren()) do
+                local buttonBase = button:FindFirstChild("Button")
+                if buttonBase and buttonBase.Color == Color3.fromRGB(0, 127, 0) then
+                    local character = LocalPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        character:PivotTo(buttonBase.CFrame)
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+    end
+    AUTO_BUY_RUNNING = false
+end
+
+
+local ANTI_AFK_IDLED_CONN = nil
+local ANTI_AFK_JUMP_CONN = nil
+local ANTI_AFK_JUMP_INTERVAL = 20
+local _antiAfkJumpTimer = 0
+local function enableAntiAfkIdled()
+    if ANTI_AFK_IDLED_CONN then return end
+    ANTI_AFK_IDLED_CONN = LocalPlayer.Idled:Connect(function()
+        if ANTI_AFK_ATIVADO then
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end
+    end)
+end
+
+local function disableAntiAfkIdled()
+    if ANTI_AFK_IDLED_CONN then
+        ANTI_AFK_IDLED_CONN:Disconnect()
+        ANTI_AFK_IDLED_CONN = nil
+    end
+end
+
+local function enableAntiAfkJump()
+    if ANTI_AFK_JUMP_CONN then return end
+    _antiAfkJumpTimer = 0
+    ANTI_AFK_JUMP_CONN = RunService.Heartbeat:Connect(function(dt)
+        if not ANTI_AFK_ATIVADO then return end
+        _antiAfkJumpTimer = _antiAfkJumpTimer + dt
+        if _antiAfkJumpTimer >= ANTI_AFK_JUMP_INTERVAL then
+            _antiAfkJumpTimer = 0
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChildOfClass("Humanoid") then
+                pcall(function()
+                    character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                end)
+            end
+        end
+    end)
+end
+
+local function disableAntiAfkJump()
+    if ANTI_AFK_JUMP_CONN then
+        ANTI_AFK_JUMP_CONN:Disconnect()
+        ANTI_AFK_JUMP_CONN = nil
+    end
+    _antiAfkJumpTimer = 0
+end
+
 local function showFarm()
     limparConteudo()
-    criarToggle(ContentFrame, "AUTO-COLLECT MOEDAS", AUTO_FARM_ATIVADO, function(v) AUTO_FARM_ATIVADO = v end)
+    local list = Instance.new("UIListLayout")
+    list.Parent = ContentFrame
+    list.Padding = UDim.new(0, 8)
+
+    criarToggle(ContentFrame, "AUTO-COLLECT MOEDAS", AUTO_FARM_ATIVADO, function(v)
+        AUTO_FARM_ATIVADO = v
+        if v and not AUTO_COLLECT_RUNNING then
+            AUTO_COLLECT_RUNNING = true
+            task.spawn(autoCollectLoop)
+        end
+    end)
+
+    criarToggle(ContentFrame, "AUTO-BUY (AUTO COMPRAR)", AUTO_BUY_ENABLED, function(v)
+        AUTO_BUY_ENABLED = v
+        if v and not AUTO_BUY_RUNNING then
+            AUTO_BUY_RUNNING = true
+            task.spawn(autoBuyLoop)
+        end
+    end)
+
+    criarToggle(ContentFrame, "ANTI-AFK", ANTI_AFK_ATIVADO, function(v)
+        ANTI_AFK_ATIVADO = v
+        if v then
+            enableAntiAfkIdled()
+            enableAntiAfkJump()
+            ANTI_AFK_ATIVADO = true
+        else
+            disableAntiAfkIdled()
+            disableAntiAfkJump()
+            ANTI_AFK_ATIVADO = false
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChildOfClass("Humanoid") then
+                pcall(function()
+                    character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Landed)
+                    character:FindFirstChildOfClass("Humanoid").PlatformStand = false
+                end)
+            end
+        end
+    end)
 end
 
 local function showVisual()
@@ -1285,7 +1409,7 @@ local function showDono()
     descLabel.Size = UDim2.new(1, -16, 1, -12)
     descLabel.Position = UDim2.new(0, 8, 0, 6)
     descLabel.BackgroundTransparency = 1
-    descLabel.Text = "Sejam bem-vindos ao melhor mode menu do Elemental Powers Tycoon — aproveitem as funcionalidades e divirtam-se!"
+    descLabel.Text = "Sejam bem-vindos ao melhor modo menu do Elemental Powers Tycoon — aproveitem as funcionalidades e divirtam-se!"
     descLabel.TextWrapped = true
     descLabel.Font = Enum.Font.SourceSans
     descLabel.TextSize = 14
@@ -1504,12 +1628,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-LocalPlayer.Idled:Connect(function()
-    if ANTI_AFK_ATIVADO then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
-    end
-end)
 
 LocalPlayer.CharacterAdded:Connect(function(newChar)
     if EFEITOS_VISUAIS_ATIVADO and EFEITO_SELECIONADO then
